@@ -19,6 +19,7 @@ from app.models.task_links import GenerationTaskLink
 from app.models.studio import FileItem, Shot, ShotDetail, ShotFrameType
 from app.models.types import FileUsageKind
 from app.services.common import entity_not_found
+from app.services.llm.model_identifier import resolve_model_identifier
 from app.services.llm.provider_resolver import resolve_provider_config_by_model
 from app.services.studio.file_usages import sync_usage_from_shot_context
 from app.services.studio.generation.video import (
@@ -184,7 +185,7 @@ async def build_run_args(
             "first_frame_base64": frame_map.get(ShotFrameType.first),
             "last_frame_base64": frame_map.get(ShotFrameType.last),
             "key_frame_base64": frame_map.get(ShotFrameType.key),
-            "model": model.name,
+            "model": resolve_model_identifier(model, provider_cfg.provider),
             "ratio": resolved_ratio,
             "seconds": shot_detail.duration,
         },

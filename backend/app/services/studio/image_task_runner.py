@@ -32,6 +32,7 @@ from app.services.studio.file_usages import (
     upsert_file_usage,
 )
 from app.services.studio.shot_status import mark_shot_generating, recompute_shot_status
+from app.services.llm.model_identifier import resolve_model_identifier
 from app.services.studio.image_tasks import load_provider_config, resolve_image_model
 from app.services.worker.async_task_support import cancel_if_requested_async
 from app.services.worker.task_logging import log_task_event, log_task_failure
@@ -266,7 +267,7 @@ async def create_image_task_and_link(
         "relation_entity_id": relation_entity_id,
         "input": {
             "prompt": prompt,
-            "model": model.name,
+            "model": resolve_model_identifier(model, provider_cfg.provider),
             "target_ratio": target_ratio,
             "resolution_profile": resolution_profile,
             "purpose": purpose,
