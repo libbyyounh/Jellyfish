@@ -57,6 +57,16 @@ async def lifespan(app: FastAPI):
     """应用生命周期：启动时初始化，关闭时清理。"""
     # 启动时：供应商注册 + 任务执行器注册（幂等）
     bootstrap_all_registries()
+    # DB 级幂等 upsert：runninghub provider + 9 个预置模型
+    from app.services.llm.model_bootstrap import bootstrap_builtin_db_resources
+    from app.core.db import async_session_maker
+    try:
+        async with async_session_maker() as session:
+            await bootstrap_builtin_db_resources(session)
+            await session.commit()
+    except Exception as e:  # noqa: BLE001
+        import logging
+        logging.getLogger("app.bootstrap").warning(f"RunningHub DB bootstrap skipped: {e}")
     yield
     # 关闭时：清理资源
     pass
