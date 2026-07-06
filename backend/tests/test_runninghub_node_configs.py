@@ -94,3 +94,11 @@ def test_ltx23_fourframe_uses_workflow_endpoint_and_4_images() -> None:
     assert by_node["1361"]["fieldValue"] == "https://rh/a.png"
     assert by_node["1364"]["fieldValue"] == "https://rh/d.png"
     assert by_node["1473"]["fieldValue"] == "flow"
+
+
+def test_ltx23_fourframe_does_not_mutate_caller_list() -> None:
+    cfg = VIDEO_NODE_CONFIGS["2054820963426021378"]
+    inp = VideoGenerationInput(prompt="flow", ratio="16:9", seconds=5)
+    original = ["https://rh/a.png"]
+    cfg.build_nodes(inp, original)
+    assert original == ["https://rh/a.png"]

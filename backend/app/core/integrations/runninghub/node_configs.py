@@ -106,12 +106,7 @@ def _build_zimage_8k_nodes(inp: ImageGenerationInput, image_url: str | None) -> 
 def _video_dimensions(workflow_id: str, inp: VideoGenerationInput) -> tuple[int, int]:
     if workflow_id == "1956699246381469698":
         return 848, 480
-    res = "720P"
     base_w, base_h = 1280, 720
-    if "1080" in res:
-        base_w, base_h = 1920, 1080
-    elif "720" not in res:
-        base_w, base_h = 854, 480
     if inp.ratio == "9:16":
         return base_h, base_w
     return base_w, base_h
@@ -154,7 +149,7 @@ def _build_ltx23_multishot_nodes(inp: VideoGenerationInput, image_urls: str | li
 
 
 def _build_ltx23_fourframe_nodes(inp: VideoGenerationInput, image_urls: str | list[str]) -> list[dict]:
-    urls = image_urls if isinstance(image_urls, list) else [image_urls]
+    urls = list(image_urls) if isinstance(image_urls, list) else [image_urls]
     while len(urls) < 4:
         urls.append(urls[-1])
     return [
