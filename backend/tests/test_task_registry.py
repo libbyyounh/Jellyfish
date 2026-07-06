@@ -86,3 +86,41 @@ def test_runninghub_provider_spec_registered() -> None:
     assert ModelCategoryKey.video in spec.supported_categories
     assert ModelCategoryKey.text not in spec.supported_categories
     assert spec.default_base_url == "https://www.runninghub.cn"
+
+
+def test_runninghub_task_adapters_registered() -> None:
+    from app.core.tasks.bootstrap import bootstrap_task_adapters
+    from app.core.tasks.registry import resolve_task_adapter
+
+    bootstrap_task_adapters()
+    image_factory = resolve_task_adapter("image_generation", "runninghub")
+    video_factory = resolve_task_adapter("video_generation", "runninghub")
+    assert image_factory is not None
+    assert video_factory is not None
+
+
+def test_runninghub_image_task_builds_adapter_impl() -> None:
+    from app.core.tasks.image_generation_tasks import ImageGenerationTask, RunningHubImageGenerationTask
+    from app.core.contracts.image_generation import ImageGenerationInput
+    from app.core.contracts.provider import ProviderConfig
+
+    impl = ImageGenerationTask._build_runninghub_impl(
+        provider_config=ProviderConfig(provider="runninghub", api_key="k", base_url="https://rh"),
+        input_=ImageGenerationInput(prompt="x", model="2052744677727715329"),
+        timeout_s=60.0,
+    )
+    assert isinstance(impl, RunningHubImageGenerationTask)
+
+
+def test_runninghub_video_task_builds_adapter_impl() -> None:
+    from app.core.tasks.video_generation_tasks import VideoGenerationTask, RunningHubVideoGenerationTask
+    from app.core.contracts.video_generation import VideoGenerationInput
+    from app.core.contracts.provider import ProviderConfig
+
+    impl = VideoGenerationTask._build_runninghub_impl(
+        provider_config=ProviderConfig(provider="runninghub", api_key="k", base_url="https://rh"),
+        input_=VideoGenerationInput(prompt="x", ratio="16:9", model="1956699246381469698"),
+        poll_interval_s=5.0,
+        timeout_s=600.0,
+    )
+    assert isinstance(impl, RunningHubVideoGenerationTask)

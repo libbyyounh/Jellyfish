@@ -11,6 +11,7 @@ from typing import Any, AsyncIterator
 
 from app.core.integrations.openai.video import OpenAIVideoApiAdapter
 from app.core.integrations.volcengine.video import VolcengineVideoApiAdapter
+from app.core.integrations.runninghub.video import RunningHubVideoApiAdapter
 from app.core.contracts.provider import ProviderConfig
 from app.core.tasks.registry import resolve_task_adapter
 from app.core.contracts.video_generation import VideoGenerationInput, VideoGenerationResult
@@ -22,6 +23,7 @@ __all__ = [
     "AbstractVideoGenerationTask",
     "OpenAIVideoGenerationTask",
     "VolcengineVideoGenerationTask",
+    "RunningHubVideoGenerationTask",
     "VideoGenerationTask",
 ]
 
@@ -206,6 +208,68 @@ class VolcengineVideoGenerationTask(AbstractVideoGenerationTask):
         )
 
 
+class RunningHubVideoGenerationTask(AbstractVideoGenerationTask):
+    """RunningHub 视频：adapter create+get，Task 层轮询。"""
+
+    def __init__(
+        self,
+        *,
+        adapter: RunningHubVideoApiAdapter | None = None,
+        provider_config: ProviderConfig,
+        input_: VideoGenerationInput,
+        poll_interval_s: float = 5.0,
+        timeout_s: float = 600.0,
+    ) -> None:
+        super().__init__(
+            provider_config=provider_config,
+            input_=input_,
+            poll_interval_s=poll_interval_s,
+            timeout_s=timeout_s,
+        )
+        self._adapter = adapter or RunningHubVideoApiAdapter()
+
+    async def _create_task(self) -> None:
+        self._provider_task_id = await self._adapter.create_video(
+            cfg=self._cfg,
+            input_=self._input,
+            timeout_s=self._timeout_s,
+        )
+
+    async def _poll_and_get_result(self) -> VideoGenerationResult:
+        task_id = self._provider_task_id or ""
+        if not task_id:
+            raise RuntimeError("RunningHub poll missing task id")
+        video_url: str | None = None
+        status_val = ""
+        while True:
+            meta = await self._adapter.get_video(
+                cfg=self._cfg,
+                video_id=task_id,
+                timeout_s=self._timeout_s,
+            )
+            status_val = str(meta.get("status") or "")
+            if status_val == "SUCCESS":
+                results = meta.get("results") or []
+                video_url = results[0].get("url") if results else None
+                if not video_url:
+                    raise RuntimeError("RunningHub SUCCESS but no result url")
+                break
+            if status_val in ("FAILED", "ERROR"):
+                raise RuntimeError(
+                    f"RunningHub task failed: "
+                    f"{meta.get('errorMessage') or meta.get('errorCode') or status_val}"
+                )
+            await self._sleep_poll()
+
+        return VideoGenerationResult(
+            url=video_url,
+            file_id=None,
+            provider_task_id=task_id,
+            provider="runninghub",
+            status=status_val or "succeeded",
+        )
+
+
 class VideoGenerationTask(BaseTask):
     """按 provider 分派到 OpenAI / 火山实现；对外构造函数签名保持不变。"""
 
@@ -252,6 +316,21 @@ class VideoGenerationTask(BaseTask):
         timeout_s: float = 120.0,
     ) -> AbstractVideoGenerationTask:
         return VolcengineVideoGenerationTask(
+            provider_config=provider_config,
+            input_=input_,
+            poll_interval_s=poll_interval_s,
+            timeout_s=timeout_s,
+        )
+
+    @staticmethod
+    def _build_runninghub_impl(
+        *,
+        provider_config: ProviderConfig,
+        input_: VideoGenerationInput,
+        poll_interval_s: float = 5.0,
+        timeout_s: float = 600.0,
+    ) -> AbstractVideoGenerationTask:
+        return RunningHubVideoGenerationTask(
             provider_config=provider_config,
             input_=input_,
             poll_interval_s=poll_interval_s,
