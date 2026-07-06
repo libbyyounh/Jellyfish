@@ -71,7 +71,7 @@ _RUNNINGHUB_MODELS: list[dict] = [
     },
     {
         "id": "runninghub-2055155307592077313",
-        "name": "LTX2.3 图生视频多镜头分段",
+        "name": "LTX2.3 图生长视频多镜头分段",
         "category": ModelCategoryKey.video,
         "params": {"workflow_id": "2055155307592077313", "mode": "singleImage", "duration": [10], "resolution": ["720P"]},
         "description": "LTX2.3 多镜头时间分段提示词控制",
