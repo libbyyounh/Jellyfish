@@ -32,5 +32,12 @@ def bootstrap_builtin_providers() -> None:
                 supported_categories=(ModelCategoryKey.text,),
                 default_base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
             ),
+            ProviderSpec(
+                key="runninghub",
+                display_name="RunningHub",
+                aliases=("runninghub", "runninghub-personal", "rh"),
+                supported_categories=(ModelCategoryKey.image, ModelCategoryKey.video),
+                default_base_url="https://www.runninghub.cn",
+            ),
         ]
     )

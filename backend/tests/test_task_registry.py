@@ -61,3 +61,28 @@ def test_resolve_task_adapter_raises_for_unknown_key() -> None:
     with pytest.raises(ValueError) as exc_info:
         resolve_task_adapter("not_registered_kind", "not_registered_provider")
     assert "Unsupported provider/task adapter" in str(exc_info.value)
+
+
+def test_resolve_provider_key_for_runninghub_aliases() -> None:
+    from app.services.llm.provider_registry import resolve_provider_key_from_name
+    from app.services.llm.provider_bootstrap import bootstrap_builtin_providers
+
+    bootstrap_builtin_providers()
+    assert resolve_provider_key_from_name("runninghub") == "runninghub"
+    assert resolve_provider_key_from_name("RunningHub") == "runninghub"
+    assert resolve_provider_key_from_name("rh") == "runninghub"
+    assert resolve_provider_key_from_name("runninghub-personal") == "runninghub"
+
+
+def test_runninghub_provider_spec_registered() -> None:
+    from app.services.llm.provider_registry import get_provider_spec, list_registered_providers
+    from app.services.llm.provider_bootstrap import bootstrap_builtin_providers
+    from app.models.llm import ModelCategoryKey
+
+    bootstrap_builtin_providers()
+    spec = get_provider_spec("runninghub")
+    assert spec.display_name == "RunningHub"
+    assert ModelCategoryKey.image in spec.supported_categories
+    assert ModelCategoryKey.video in spec.supported_categories
+    assert ModelCategoryKey.text not in spec.supported_categories
+    assert spec.default_base_url == "https://www.runninghub.cn"
