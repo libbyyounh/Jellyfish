@@ -34,3 +34,16 @@ def test_openai_returns_model_name() -> None:
 def test_volcengine_returns_model_name() -> None:
     model = _make_model(name="doubao-seedream-3.0")
     assert resolve_model_identifier(model, "volcengine") == "doubao-seedream-3.0"
+
+
+def test_runninghub_enterprise_returns_model_name_from_params() -> None:
+    model = _make_model(
+        name="万相 2.7 图生视频",
+        params={"model_name": "wan-2.7/image-to-video"},
+    )
+    assert resolve_model_identifier(model, "runninghub-enterprise") == "wan-2.7/image-to-video"
+
+
+def test_runninghub_enterprise_without_model_name_falls_back_to_name() -> None:
+    model = _make_model(name="万相 2.7 图生视频", params={})
+    assert resolve_model_identifier(model, "runninghub-enterprise") == "万相 2.7 图生视频"
