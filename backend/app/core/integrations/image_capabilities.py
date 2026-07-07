@@ -50,6 +50,11 @@ def register_image_model_capability(
 
         register_runninghub_image_capability(model_prefix=model_prefix, capability=capability)
         return
+    if provider == "grsai":
+        from app.core.integrations.grsai.image_capabilities import register_grsai_image_capability
+
+        register_grsai_image_capability(model_prefix=model_prefix, capability=capability)
+        return
     from app.core.integrations.volcengine.image_capabilities import register_volcengine_image_capability
 
     register_volcengine_image_capability(model_prefix=model_prefix, capability=capability)
@@ -62,10 +67,12 @@ def clear_image_model_capability_overrides(*, provider: ProviderKey | None = Non
 
     if provider is None:
         from app.core.integrations.runninghub.image_capabilities import clear_runninghub_image_capability_overrides
+        from app.core.integrations.grsai.image_capabilities import clear_grsai_image_capability_overrides
 
         clear_openai_image_capability_overrides()
         clear_volcengine_image_capability_overrides()
         clear_runninghub_image_capability_overrides()
+        clear_grsai_image_capability_overrides()
         return
     if provider == "openai":
         clear_openai_image_capability_overrides()
@@ -74,6 +81,11 @@ def clear_image_model_capability_overrides(*, provider: ProviderKey | None = Non
         from app.core.integrations.runninghub.image_capabilities import clear_runninghub_image_capability_overrides
 
         clear_runninghub_image_capability_overrides()
+        return
+    if provider == "grsai":
+        from app.core.integrations.grsai.image_capabilities import clear_grsai_image_capability_overrides
+
+        clear_grsai_image_capability_overrides()
         return
     clear_volcengine_image_capability_overrides()
 
@@ -87,6 +99,10 @@ def resolve_image_capability(*, provider: ProviderKey, model: str | None) -> Ima
         from app.core.integrations.runninghub.image_capabilities import resolve_runninghub_image_capability
 
         return resolve_runninghub_image_capability(model)
+    if provider == "grsai":
+        from app.core.integrations.grsai.image_capabilities import resolve_grsai_image_capability
+
+        return resolve_grsai_image_capability(model)
     from app.core.integrations.volcengine.image_capabilities import resolve_volcengine_image_capability
 
     return resolve_volcengine_image_capability(model)
