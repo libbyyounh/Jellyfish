@@ -270,6 +270,113 @@ _RUNNINGHUB_ENTERPRISE_MODELS: list[dict] = [
 ]
 
 
+_GRSAI_PROVIDER_DEFAULTS = {
+    "id": "grsai",
+    "name": "Grsai",
+    "base_url": "https://grsai.dakka.com.cn",
+    "image_base_url": None,
+    "video_base_url": None,
+    "api_secret": "",
+    "description": "Grsai 图片生成：nano-banana 系列 + gpt-image-2 系列",
+    "status": ProviderStatus.testing,
+    "created_by": "system",
+}
+
+_GRSAI_MODELS: list[dict] = [
+    {
+        "id": "grsai-nano-banana",
+        "name": "nano-banana",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "nano-banana"},
+        "description": "Nano Banana 基础模型，支持多比例与 1K/2K/4K 输出",
+    },
+    {
+        "id": "grsai-nano-banana-fast",
+        "name": "nano-banana-fast",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "nano-banana"},
+        "description": "Nano Banana Fast，快速生成版本",
+    },
+    {
+        "id": "grsai-nano-banana-2",
+        "name": "nano-banana-2",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "nano-banana"},
+        "description": "Nano Banana 2，额外支持 1:4/4:1/1:8/8:1 比例",
+    },
+    {
+        "id": "grsai-nano-banana-2-cl",
+        "name": "nano-banana-2-cl",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "nano-banana"},
+        "description": "Nano Banana 2 CL 版本",
+    },
+    {
+        "id": "grsai-nano-banana-2-2k-cl",
+        "name": "nano-banana-2-2k-cl",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "nano-banana"},
+        "description": "Nano Banana 2 2K CL 版本",
+    },
+    {
+        "id": "grsai-nano-banana-2-4k-cl",
+        "name": "nano-banana-2-4k-cl",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "nano-banana"},
+        "description": "Nano Banana 2 4K CL 版本",
+    },
+    {
+        "id": "grsai-nano-banana-pro",
+        "name": "nano-banana-pro",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "nano-banana"},
+        "description": "Nano Banana Pro，高质量版本",
+    },
+    {
+        "id": "grsai-nano-banana-pro-vt",
+        "name": "nano-banana-pro-vt",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "nano-banana"},
+        "description": "Nano Banana Pro VT 版本",
+    },
+    {
+        "id": "grsai-nano-banana-pro-cl",
+        "name": "nano-banana-pro-cl",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "nano-banana"},
+        "description": "Nano Banana Pro CL 版本",
+    },
+    {
+        "id": "grsai-nano-banana-pro-vip",
+        "name": "nano-banana-pro-vip",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "nano-banana"},
+        "description": "Nano Banana Pro VIP 版本",
+    },
+    {
+        "id": "grsai-nano-banana-pro-4k-vip",
+        "name": "nano-banana-pro-4k-vip",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "nano-banana"},
+        "description": "Nano Banana Pro 4K VIP 版本",
+    },
+    {
+        "id": "grsai-gpt-image-2",
+        "name": "gpt-image-2",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "gpt-image-2"},
+        "description": "GPT Image 2，支持比例或像素值",
+    },
+    {
+        "id": "grsai-gpt-image-2-vip",
+        "name": "gpt-image-2-vip",
+        "category": ModelCategoryKey.image,
+        "params": {"family": "gpt-image-2"},
+        "description": "GPT Image 2 VIP，支持 1K-4K 像素值",
+    },
+]
+
+
 async def bootstrap_builtin_db_resources(session: AsyncSession) -> None:
     """幂等 upsert runninghub + runninghub-enterprise provider 行 + 9 + 14 个 model 行。
 
@@ -319,6 +426,27 @@ async def bootstrap_builtin_db_resources(session: AsyncSession) -> None:
         )
         session.add(ent_provider)
 
+    # --- Grsai provider ---
+    grsai_provider = (
+        await session.execute(select(Provider).where(Provider.id == "grsai"))
+    ).scalar_one_or_none()
+
+    if grsai_provider is None:
+        grsai_provider = Provider(
+            id=_GRSAI_PROVIDER_DEFAULTS["id"],
+            name=_GRSAI_PROVIDER_DEFAULTS["name"],
+            base_url=_GRSAI_PROVIDER_DEFAULTS["base_url"],
+            image_base_url=_GRSAI_PROVIDER_DEFAULTS["image_base_url"],
+            video_base_url=_GRSAI_PROVIDER_DEFAULTS["video_base_url"],
+            api_key="",
+            api_secret=_GRSAI_PROVIDER_DEFAULTS["api_secret"],
+            description=_GRSAI_PROVIDER_DEFAULTS["description"],
+            status=_GRSAI_PROVIDER_DEFAULTS["status"],
+            created_by=_GRSAI_PROVIDER_DEFAULTS["created_by"],
+        )
+        session.add(grsai_provider)
+    # 已存在则不覆盖用户字段
+
     # --- 个人版 models ---
     for spec in _RUNNINGHUB_MODELS:
         model = (
@@ -362,5 +490,28 @@ async def bootstrap_builtin_db_resources(session: AsyncSession) -> None:
             model.name = spec["name"]
             model.category = spec["category"]
             model.provider_id = "runninghub-enterprise"
+            model.params = spec["params"]
+            model.description = spec["description"]
+
+    # --- Grsai models ---
+    for spec in _GRSAI_MODELS:
+        model = (
+            await session.execute(select(Model).where(Model.id == spec["id"]))
+        ).scalar_one_or_none()
+        if model is None:
+            model = Model(
+                id=spec["id"],
+                name=spec["name"],
+                category=spec["category"],
+                provider_id="grsai",
+                params=spec["params"],
+                description=spec["description"],
+                created_by="system",
+            )
+            session.add(model)
+        else:
+            model.name = spec["name"]
+            model.category = spec["category"]
+            model.provider_id = "grsai"
             model.params = spec["params"]
             model.description = spec["description"]
