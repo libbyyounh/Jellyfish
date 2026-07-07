@@ -11,6 +11,7 @@ TASK_ADAPTER_SPECS = (
     ("image_generation", "openai", ImageGenerationTask._build_openai_impl),
     ("image_generation", "volcengine", ImageGenerationTask._build_volcengine_impl),
     ("image_generation", "runninghub", ImageGenerationTask._build_runninghub_impl),
+    ("image_generation", "grsai", ImageGenerationTask._build_grsai_impl),
     ("video_generation", "openai", VideoGenerationTask._build_openai_impl),
     ("video_generation", "volcengine", VideoGenerationTask._build_volcengine_impl),
     ("video_generation", "runninghub", VideoGenerationTask._build_runninghub_impl),

@@ -195,3 +195,16 @@ def test_grsai_provider_spec_registered() -> None:
     assert ModelCategoryKey.text not in spec.supported_categories
     assert ModelCategoryKey.video not in spec.supported_categories
     assert spec.default_base_url == "https://grsai.dakka.com.cn"
+
+
+def test_grsai_image_task_builds_adapter_impl() -> None:
+    from app.core.tasks.image_generation_tasks import ImageGenerationTask, GrsaiImageGenerationTask
+    from app.core.contracts.image_generation import ImageGenerationInput
+    from app.core.contracts.provider import ProviderConfig
+
+    impl = ImageGenerationTask._build_grsai_impl(
+        provider_config=ProviderConfig(provider="grsai", api_key="k", base_url="https://grsai.dakka.com.cn"),
+        input_=ImageGenerationInput(prompt="x", model="nano-banana-2"),
+        timeout_s=60.0,
+    )
+    assert isinstance(impl, GrsaiImageGenerationTask)
