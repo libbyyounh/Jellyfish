@@ -39,5 +39,12 @@ def bootstrap_builtin_providers() -> None:
                 supported_categories=(ModelCategoryKey.image, ModelCategoryKey.video),
                 default_base_url="https://www.runninghub.cn",
             ),
+            ProviderSpec(
+                key="runninghub-enterprise",
+                display_name="RunningHub 企业版",
+                aliases=("runninghub-enterprise", "rh-enterprise", "RunningHub Enterprise"),
+                supported_categories=(ModelCategoryKey.video,),
+                default_base_url="https://www.runninghub.cn",
+            ),
         ]
     )

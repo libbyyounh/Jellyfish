@@ -124,3 +124,27 @@ def test_runninghub_video_task_builds_adapter_impl() -> None:
         timeout_s=600.0,
     )
     assert isinstance(impl, RunningHubVideoGenerationTask)
+
+
+def test_resolve_provider_key_for_runninghub_enterprise_aliases() -> None:
+    from app.services.llm.provider_registry import resolve_provider_key_from_name
+    from app.services.llm.provider_bootstrap import bootstrap_builtin_providers
+
+    bootstrap_builtin_providers()
+    assert resolve_provider_key_from_name("runninghub-enterprise") == "runninghub-enterprise"
+    assert resolve_provider_key_from_name("RunningHub Enterprise") == "runninghub-enterprise"
+    assert resolve_provider_key_from_name("rh-enterprise") == "runninghub-enterprise"
+
+
+def test_runninghub_enterprise_provider_spec_registered() -> None:
+    from app.services.llm.provider_registry import get_provider_spec
+    from app.services.llm.provider_bootstrap import bootstrap_builtin_providers
+    from app.models.llm import ModelCategoryKey
+
+    bootstrap_builtin_providers()
+    spec = get_provider_spec("runninghub-enterprise")
+    assert spec.display_name == "RunningHub 企业版"
+    assert ModelCategoryKey.video in spec.supported_categories
+    assert ModelCategoryKey.image not in spec.supported_categories
+    assert ModelCategoryKey.text not in spec.supported_categories
+    assert spec.default_base_url == "https://www.runninghub.cn"
