@@ -47,3 +47,8 @@ def test_runninghub_enterprise_returns_model_name_from_params() -> None:
 def test_runninghub_enterprise_without_model_name_falls_back_to_name() -> None:
     model = _make_model(name="万相 2.7 图生视频", params={})
     assert resolve_model_identifier(model, "runninghub-enterprise") == "万相 2.7 图生视频"
+
+
+def test_grsai_returns_model_name() -> None:
+    model = _make_model(name="nano-banana-2")
+    assert resolve_model_identifier(model, "grsai") == "nano-banana-2"
