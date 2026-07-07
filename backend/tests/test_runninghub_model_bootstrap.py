@@ -90,3 +90,60 @@ async def test_bootstrap_model_has_workflow_id_in_params(db: AsyncSession) -> No
     )).scalar_one()
     assert model.params["workflow_id"] == "2052744677727715329"
     assert model.params["mode"] == "text"
+
+
+@pytest.mark.asyncio
+async def test_bootstrap_creates_enterprise_provider_and_14_models(db: AsyncSession) -> None:
+    await bootstrap_builtin_db_resources(db)
+    await db.commit()
+
+    provider = (await db.execute(select(Provider).where(Provider.id == "runninghub-enterprise"))).scalar_one()
+    assert provider.name == "RunningHub 企业版"
+    assert provider.base_url == "https://www.runninghub.cn"
+    assert provider.status == ProviderStatus.testing
+
+    models = (
+        await db.execute(select(Model).where(Model.provider_id == "runninghub-enterprise"))
+    ).scalars().all()
+    assert len(models) == 14
+    for m in models:
+        assert m.category == ModelCategoryKey.video
+        assert "model_name" in m.params
+        assert "mode" in m.params
+        assert "duration_resolution_map" in m.params
+
+
+@pytest.mark.asyncio
+async def test_bootstrap_enterprise_is_idempotent(db: AsyncSession) -> None:
+    await bootstrap_builtin_db_resources(db)
+    await db.commit()
+    await bootstrap_builtin_db_resources(db)
+    await db.commit()
+
+    models = (
+        await db.execute(select(Model).where(Model.provider_id == "runninghub-enterprise"))
+    ).scalars().all()
+    assert len(models) == 14
+
+
+@pytest.mark.asyncio
+async def test_bootstrap_preserves_enterprise_user_api_key(db: AsyncSession) -> None:
+    db.add(Provider(
+        id="runninghub-enterprise",
+        name="Old Enterprise",
+        base_url="https://custom.rh-ent",
+        api_key="user-ent-key",
+        api_secret="",
+        description="",
+        status=ProviderStatus.active,
+        created_by="user",
+    ))
+    await db.commit()
+
+    await bootstrap_builtin_db_resources(db)
+    await db.commit()
+
+    provider = (await db.execute(select(Provider).where(Provider.id == "runninghub-enterprise"))).scalar_one()
+    assert provider.api_key == "user-ent-key"
+    assert provider.base_url == "https://custom.rh-ent"
+    assert provider.status == ProviderStatus.active
