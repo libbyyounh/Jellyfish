@@ -14,6 +14,7 @@ TASK_ADAPTER_SPECS = (
     ("video_generation", "openai", VideoGenerationTask._build_openai_impl),
     ("video_generation", "volcengine", VideoGenerationTask._build_volcengine_impl),
     ("video_generation", "runninghub", VideoGenerationTask._build_runninghub_impl),
+    ("video_generation", "runninghub-enterprise", VideoGenerationTask._build_runninghub_enterprise_impl),
 )
 
 

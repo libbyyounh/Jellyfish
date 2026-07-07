@@ -126,6 +126,29 @@ def test_runninghub_video_task_builds_adapter_impl() -> None:
     assert isinstance(impl, RunningHubVideoGenerationTask)
 
 
+def test_runninghub_enterprise_task_adapters_registered() -> None:
+    from app.core.tasks.bootstrap import bootstrap_task_adapters
+    from app.core.tasks.registry import resolve_task_adapter
+
+    bootstrap_task_adapters()
+    video_factory = resolve_task_adapter("video_generation", "runninghub-enterprise")
+    assert video_factory is not None
+
+
+def test_runninghub_enterprise_video_task_builds_adapter_impl() -> None:
+    from app.core.tasks.video_generation_tasks import VideoGenerationTask, RunningHubVideoGenerationTask
+    from app.core.contracts.video_generation import VideoGenerationInput
+    from app.core.contracts.provider import ProviderConfig
+
+    impl = VideoGenerationTask._build_runninghub_enterprise_impl(
+        provider_config=ProviderConfig(provider="runninghub-enterprise", api_key="k", base_url="https://rh"),
+        input_=VideoGenerationInput(prompt="x", ratio="16:9", model="wan-2.7/image-to-video"),
+        poll_interval_s=5.0,
+        timeout_s=600.0,
+    )
+    assert isinstance(impl, RunningHubVideoGenerationTask)
+
+
 def test_resolve_provider_key_for_runninghub_enterprise_aliases() -> None:
     from app.services.llm.provider_registry import resolve_provider_key_from_name
     from app.services.llm.provider_bootstrap import bootstrap_builtin_providers

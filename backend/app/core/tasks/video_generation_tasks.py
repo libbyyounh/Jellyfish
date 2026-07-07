@@ -12,6 +12,7 @@ from typing import Any, AsyncIterator
 from app.core.integrations.openai.video import OpenAIVideoApiAdapter
 from app.core.integrations.volcengine.video import VolcengineVideoApiAdapter
 from app.core.integrations.runninghub.video import RunningHubVideoApiAdapter
+from app.core.integrations.runninghub.enterprise.video import RunningHubEnterpriseVideoApiAdapter
 from app.core.contracts.provider import ProviderConfig
 from app.core.tasks.registry import resolve_task_adapter
 from app.core.contracts.video_generation import VideoGenerationInput, VideoGenerationResult
@@ -331,6 +332,22 @@ class VideoGenerationTask(BaseTask):
         timeout_s: float = 600.0,
     ) -> AbstractVideoGenerationTask:
         return RunningHubVideoGenerationTask(
+            provider_config=provider_config,
+            input_=input_,
+            poll_interval_s=poll_interval_s,
+            timeout_s=timeout_s,
+        )
+
+    @staticmethod
+    def _build_runninghub_enterprise_impl(
+        *,
+        provider_config: ProviderConfig,
+        input_: VideoGenerationInput,
+        poll_interval_s: float = 5.0,
+        timeout_s: float = 600.0,
+    ) -> AbstractVideoGenerationTask:
+        return RunningHubVideoGenerationTask(
+            adapter=RunningHubEnterpriseVideoApiAdapter(),
             provider_config=provider_config,
             input_=input_,
             poll_interval_s=poll_interval_s,
