@@ -20,7 +20,7 @@ VideoRatio = Literal["16:9", "4:3", "1:1", "3:4", "9:16", "21:9"]
 
 
 class VideoGenerationInput(BaseModel):
-    """视频生成输入：支持文本提示词 + 可选的三种帧参考图（纯 base64 或 data URL）。"""
+    """视频生成输入：支持文本提示词 + 可选的多种帧参考图（纯 base64 或 data URL）。"""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -41,6 +41,19 @@ class VideoGenerationInput(BaseModel):
     )
     watermark: Optional[bool] = Field(None, description="是否包含水印，供应商/模型可能有差异")
 
+    reference_frames_base64: Optional[list[str]] = Field(
+        None,
+        description="额外参考帧 base64 列表（多图参考模型，如 wan-2.7 reference-to-video 最多 9 张）",
+    )
+    resolution: Optional[str] = Field(
+        None,
+        description="分辨率标识（'480P' / '720P' / '1080P' / '4K'），供应商/模型可能有差异",
+    )
+    audio: Optional[bool] = Field(
+        None,
+        description="是否生成音频，仅部分模型支持；None 时按 .ts 行为处理（kling 系列默认 True，其他默认 False）",
+    )
+
     @model_validator(mode="after")
     def require_prompt_or_any_reference(self) -> "VideoGenerationInput":
         has_prompt = bool((self.prompt or "").strip())
@@ -49,6 +62,7 @@ class VideoGenerationInput(BaseModel):
                 _strip_optional_b64(self.first_frame_base64),
                 _strip_optional_b64(self.last_frame_base64),
                 _strip_optional_b64(self.key_frame_base64),
+                bool(self.reference_frames_base64 and any(self.reference_frames_base64)),
             ]
         )
         if not has_prompt and not has_ref:
