@@ -46,5 +46,12 @@ def bootstrap_builtin_providers() -> None:
                 supported_categories=(ModelCategoryKey.video,),
                 default_base_url="https://www.runninghub.cn",
             ),
+            ProviderSpec(
+                key="grsai",
+                display_name="Grsai",
+                aliases=("grsai",),
+                supported_categories=(ModelCategoryKey.image,),
+                default_base_url="https://grsai.dakka.com.cn",
+            ),
         ]
     )

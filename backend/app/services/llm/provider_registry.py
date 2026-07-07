@@ -95,6 +95,8 @@ def resolve_provider_key_from_name(name: str) -> str:
     # 兼容历史“包含式”命名（如 Doubao Video / bytedance-xxx）。
     if "runninghub-enterprise" in alias or "rh-enterprise" in alias:
         return "runninghub-enterprise"
+    if "grsai" in alias:
+        return "grsai"
     if "volc" in alias or "doubao" in alias or "bytedance" in alias:
         return "volcengine"
     if "runninghub" in alias or alias == "rh":

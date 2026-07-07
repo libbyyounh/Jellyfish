@@ -171,3 +171,27 @@ def test_runninghub_enterprise_provider_spec_registered() -> None:
     assert ModelCategoryKey.image not in spec.supported_categories
     assert ModelCategoryKey.text not in spec.supported_categories
     assert spec.default_base_url == "https://www.runninghub.cn"
+
+
+def test_resolve_provider_key_for_grsai_aliases() -> None:
+    from app.services.llm.provider_registry import resolve_provider_key_from_name
+    from app.services.llm.provider_bootstrap import bootstrap_builtin_providers
+
+    bootstrap_builtin_providers()
+    assert resolve_provider_key_from_name("grsai") == "grsai"
+    assert resolve_provider_key_from_name("Grsai") == "grsai"
+    assert resolve_provider_key_from_name("GRSAI") == "grsai"
+
+
+def test_grsai_provider_spec_registered() -> None:
+    from app.services.llm.provider_registry import get_provider_spec
+    from app.services.llm.provider_bootstrap import bootstrap_builtin_providers
+    from app.models.llm import ModelCategoryKey
+
+    bootstrap_builtin_providers()
+    spec = get_provider_spec("grsai")
+    assert spec.display_name == "Grsai"
+    assert ModelCategoryKey.image in spec.supported_categories
+    assert ModelCategoryKey.text not in spec.supported_categories
+    assert ModelCategoryKey.video not in spec.supported_categories
+    assert spec.default_base_url == "https://grsai.dakka.com.cn"
