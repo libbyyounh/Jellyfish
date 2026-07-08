@@ -93,7 +93,7 @@ async def test_bootstrap_model_has_workflow_id_in_params(db: AsyncSession) -> No
 
 
 @pytest.mark.asyncio
-async def test_bootstrap_creates_enterprise_provider_and_14_models(db: AsyncSession) -> None:
+async def test_bootstrap_creates_enterprise_provider_and_23_models(db: AsyncSession) -> None:
     await bootstrap_builtin_db_resources(db)
     await db.commit()
 
@@ -105,7 +105,7 @@ async def test_bootstrap_creates_enterprise_provider_and_14_models(db: AsyncSess
     models = (
         await db.execute(select(Model).where(Model.provider_id == "runninghub-enterprise"))
     ).scalars().all()
-    assert len(models) == 14
+    assert len(models) == 23
     for m in models:
         assert m.category == ModelCategoryKey.video
         assert "model_name" in m.params
@@ -123,7 +123,7 @@ async def test_bootstrap_enterprise_is_idempotent(db: AsyncSession) -> None:
     models = (
         await db.execute(select(Model).where(Model.provider_id == "runninghub-enterprise"))
     ).scalars().all()
-    assert len(models) == 14
+    assert len(models) == 23
 
 
 @pytest.mark.asyncio
@@ -147,3 +147,38 @@ async def test_bootstrap_preserves_enterprise_user_api_key(db: AsyncSession) -> 
     assert provider.api_key == "user-ent-key"
     assert provider.base_url == "https://custom.rh-ent"
     assert provider.status == ProviderStatus.active
+
+
+@pytest.mark.asyncio
+async def test_bootstrap_creates_9_sparkvideo_models(db: AsyncSession) -> None:
+    await bootstrap_builtin_db_resources(db)
+    await db.commit()
+
+    expected = {
+        "runninghub-enterprise-sparkvideo-2.0-text-to-video": "sparkvideo-2.0/text-to-video",
+        "runninghub-enterprise-sparkvideo-2.0-image-to-video": "sparkvideo-2.0/image-to-video",
+        "runninghub-enterprise-sparkvideo-2.0-multimodal-video": "sparkvideo-2.0/multimodal-video",
+        "runninghub-enterprise-sparkvideo-2.0-fast-text-to-video": "sparkvideo-2.0-fast/text-to-video",
+        "runninghub-enterprise-sparkvideo-2.0-fast-image-to-video": "sparkvideo-2.0-fast/image-to-video",
+        "runninghub-enterprise-sparkvideo-2.0-fast-multimodal-video": "sparkvideo-2.0-fast/multimodal-video",
+        "runninghub-enterprise-sparkvideo-2.0-mini-text-to-video": "sparkvideo-2.0-mini/text-to-video",
+        "runninghub-enterprise-sparkvideo-2.0-mini-image-to-video": "sparkvideo-2.0-mini/image-to-video",
+        "runninghub-enterprise-sparkvideo-2.0-mini-multimodal-video": "sparkvideo-2.0-mini/multimodal-video",
+    }
+    rows = (
+        await db.execute(select(Model).where(Model.id.in_(list(expected.keys()))))
+    ).scalars().all()
+    assert len(rows) == 9
+    for m in rows:
+        assert m.provider_id == "runninghub-enterprise"
+        assert m.category == ModelCategoryKey.video
+        assert m.params["model_name"] == expected[m.id]
+        assert m.params["audio"] == "optional"
+        drm = m.params["duration_resolution_map"]
+        assert drm == [{"duration": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "resolution": ["480P", "720P", "1080P", "2K", "4K"]}]
+        # mode matches the model_name suffix
+        assert m.params["mode"] == {
+            "text-to-video": "text",
+            "image-to-video": "startEndRequired",
+            "multimodal-video": "multimodal",
+        }[m.params["model_name"].rsplit("/", 1)[-1]]

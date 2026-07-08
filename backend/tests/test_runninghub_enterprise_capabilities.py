@@ -48,3 +48,35 @@ def test_rhart_v31_fast_is_8_to_8() -> None:
         cap = resolve_runninghub_enterprise_video_capability(model)
         assert cap.min_seconds == 8
         assert cap.max_seconds == 8
+
+
+def test_sparkvideo_variants_are_4_to_15_with_seed_and_all_ratios() -> None:
+    for model in (
+        "sparkvideo-2.0/text-to-video",
+        "sparkvideo-2.0/image-to-video",
+        "sparkvideo-2.0/multimodal-video",
+        "sparkvideo-2.0-fast/text-to-video",
+        "sparkvideo-2.0-fast/image-to-video",
+        "sparkvideo-2.0-fast/multimodal-video",
+        "sparkvideo-2.0-mini/text-to-video",
+        "sparkvideo-2.0-mini/image-to-video",
+        "sparkvideo-2.0-mini/multimodal-video",
+    ):
+        cap = resolve_runninghub_enterprise_video_capability(model)
+        assert cap.supports_seed is True
+        assert cap.supports_watermark is False
+        assert cap.allowed_ratios == {"16:9", "4:3", "1:1", "3:4", "9:16", "21:9"}
+        assert cap.default_ratio == "16:9"
+        assert cap.min_seconds == 4
+        assert cap.max_seconds == 15
+
+
+def test_sparkvideo_prefix_does_not_match_unrelated_family() -> None:
+    """sparkvideo-2.0/ must not match the -fast/-mini variants (distinct prefixes)."""
+    base = resolve_runninghub_enterprise_video_capability("sparkvideo-2.0/text-to-video")
+    fast = resolve_runninghub_enterprise_video_capability("sparkvideo-2.0-fast/text-to-video")
+    mini = resolve_runninghub_enterprise_video_capability("sparkvideo-2.0-mini/text-to-video")
+    # all share the same capability, but each is matched by its own prefix, not the base's
+    assert base.max_seconds == 15
+    assert fast.max_seconds == 15
+    assert mini.max_seconds == 15

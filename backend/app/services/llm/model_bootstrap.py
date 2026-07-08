@@ -93,7 +93,7 @@ _RUNNINGHUB_ENTERPRISE_PROVIDER_DEFAULTS = {
     "image_base_url": None,
     "video_base_url": None,
     "api_secret": "",
-    "description": "RunningHub 企业版：万相 2.7 / LTX2.3 / HappyHorse / 可灵 / 全能视频 系列视频模型",
+    "description": "RunningHub 企业版：万相 2.7 / LTX2.3 / HappyHorse / 可灵 / 全能视频 / Seedance 2.0 系列视频模型",
     "status": ProviderStatus.testing,
     "created_by": "system",
 }
@@ -267,6 +267,115 @@ _RUNNINGHUB_ENTERPRISE_MODELS: list[dict] = [
         },
         "description": "全能视频 V3.1-fast 图生视频，低价渠道，最多 3 张图参考，支持 720p/1080p/4k。",
     },
+    # ---- seedance 2.0 / Fast / Mini（sparkvideo-2.0[-fast|-mini]）----
+    {
+        "id": "runninghub-enterprise-sparkvideo-2.0-text-to-video",
+        "name": "Seedance 2.0 文生视频",
+        "category": ModelCategoryKey.video,
+        "params": {
+            "model_name": "sparkvideo-2.0/text-to-video",
+            "mode": "text",
+            "duration_resolution_map": [{"duration": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "resolution": ["480P", "720P", "1080P", "2K", "4K"]}],
+            "audio": "optional",
+        },
+        "description": "Seedance 2.0 文生视频，纯提示词生成，支持 4-15s、多比例与可选音频。",
+    },
+    {
+        "id": "runninghub-enterprise-sparkvideo-2.0-image-to-video",
+        "name": "Seedance 2.0 图生视频",
+        "category": ModelCategoryKey.video,
+        "params": {
+            "model_name": "sparkvideo-2.0/image-to-video",
+            "mode": "startEndRequired",
+            "duration_resolution_map": [{"duration": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "resolution": ["480P", "720P", "1080P", "2K", "4K"]}],
+            "audio": "optional",
+        },
+        "description": "Seedance 2.0 图生视频，首帧（可选尾帧）控制，支持 4-15s 与可选音频。",
+    },
+    {
+        "id": "runninghub-enterprise-sparkvideo-2.0-multimodal-video",
+        "name": "Seedance 2.0 多模态视频",
+        "category": ModelCategoryKey.video,
+        "params": {
+            "model_name": "sparkvideo-2.0/multimodal-video",
+            "mode": "multimodal",
+            "duration_resolution_map": [{"duration": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "resolution": ["480P", "720P", "1080P", "2K", "4K"]}],
+            "audio": "optional",
+        },
+        "description": "Seedance 2.0 多模态视频，支持多图参考（最多 9 张）+ 提示词生成。",
+    },
+    {
+        "id": "runninghub-enterprise-sparkvideo-2.0-fast-text-to-video",
+        "name": "Seedance 2.0-Fast 文生视频",
+        "category": ModelCategoryKey.video,
+        "params": {
+            "model_name": "sparkvideo-2.0-fast/text-to-video",
+            "mode": "text",
+            "duration_resolution_map": [{"duration": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "resolution": ["480P", "720P", "1080P", "2K", "4K"]}],
+            "audio": "optional",
+        },
+        "description": "Seedance 2.0-Fast 文生视频，快速生成版本，支持 4-15s 与可选音频。",
+    },
+    {
+        "id": "runninghub-enterprise-sparkvideo-2.0-fast-image-to-video",
+        "name": "Seedance 2.0-Fast 图生视频",
+        "category": ModelCategoryKey.video,
+        "params": {
+            "model_name": "sparkvideo-2.0-fast/image-to-video",
+            "mode": "startEndRequired",
+            "duration_resolution_map": [{"duration": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "resolution": ["480P", "720P", "1080P", "2K", "4K"]}],
+            "audio": "optional",
+        },
+        "description": "Seedance 2.0-Fast 图生视频，首帧（可选尾帧）控制，快速生成版本。",
+    },
+    {
+        "id": "runninghub-enterprise-sparkvideo-2.0-fast-multimodal-video",
+        "name": "Seedance 2.0-Fast 多模态视频",
+        "category": ModelCategoryKey.video,
+        "params": {
+            "model_name": "sparkvideo-2.0-fast/multimodal-video",
+            "mode": "multimodal",
+            "duration_resolution_map": [{"duration": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "resolution": ["480P", "720P", "1080P", "2K", "4K"]}],
+            "audio": "optional",
+        },
+        "description": "Seedance 2.0-Fast 多模态视频，多图参考 + 提示词，快速生成版本。",
+    },
+    {
+        "id": "runninghub-enterprise-sparkvideo-2.0-mini-text-to-video",
+        "name": "Seedance 2.0-Mini 文生视频",
+        "category": ModelCategoryKey.video,
+        "params": {
+            "model_name": "sparkvideo-2.0-mini/text-to-video",
+            "mode": "text",
+            "duration_resolution_map": [{"duration": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "resolution": ["480P", "720P", "1080P", "2K", "4K"]}],
+            "audio": "optional",
+        },
+        "description": "Seedance 2.0-Mini 文生视频，轻量版本，1080p/2k/4k 由 720p 超分补帧。",
+    },
+    {
+        "id": "runninghub-enterprise-sparkvideo-2.0-mini-image-to-video",
+        "name": "Seedance 2.0-Mini 图生视频",
+        "category": ModelCategoryKey.video,
+        "params": {
+            "model_name": "sparkvideo-2.0-mini/image-to-video",
+            "mode": "startEndRequired",
+            "duration_resolution_map": [{"duration": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "resolution": ["480P", "720P", "1080P", "2K", "4K"]}],
+            "audio": "optional",
+        },
+        "description": "Seedance 2.0-Mini 图生视频，首帧（可选尾帧）控制，轻量版本。",
+    },
+    {
+        "id": "runninghub-enterprise-sparkvideo-2.0-mini-multimodal-video",
+        "name": "Seedance 2.0-Mini 多模态视频",
+        "category": ModelCategoryKey.video,
+        "params": {
+            "model_name": "sparkvideo-2.0-mini/multimodal-video",
+            "mode": "multimodal",
+            "duration_resolution_map": [{"duration": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "resolution": ["480P", "720P", "1080P", "2K", "4K"]}],
+            "audio": "optional",
+        },
+        "description": "Seedance 2.0-Mini 多模态视频，多图参考 + 提示词，轻量版本。",
+    },
 ]
 
 
@@ -378,7 +487,7 @@ _GRSAI_MODELS: list[dict] = [
 
 
 async def bootstrap_builtin_db_resources(session: AsyncSession) -> None:
-    """幂等 upsert runninghub + runninghub-enterprise provider 行 + 9 + 14 个 model 行。
+    """幂等 upsert runninghub + runninghub-enterprise + grsai provider 行 + 9 + 23 + 13 个 model 行。
 
     - Provider 存在时：不覆盖 api_key / base_url / status / created_by（保留用户配置）
     - Provider 不存在时：用默认值插入（api_key 为空，用户在 UI 填）

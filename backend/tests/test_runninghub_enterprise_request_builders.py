@@ -245,5 +245,112 @@ def test_rhart_v31_image_to_video_body() -> None:
     }
 
 
-def test_enterprise_builders_has_14_entries() -> None:
-    assert len(ENTERPRISE_VIDEO_BUILDERS) == 14
+# ---- seedance 2.0 / Fast / Mini（sparkvideo-2.0[-fast|-mini]）----
+def test_sparkvideo_text_to_video_body() -> None:
+    spec = ENTERPRISE_VIDEO_BUILDERS["sparkvideo-2.0/text-to-video"]
+    assert spec.endpoint_path == "/openapi/v2/rhart-video/sparkvideo-2.0/text-to-video"
+    assert spec.mode == "text"
+    body = spec.build_request(_inp(seconds=5, resolution="720P"), [])
+    assert body == {
+        "prompt": "a cat runs",
+        "resolution": "720p",
+        "duration": "5",
+        "generateAudio": True,
+        "ratio": "16:9",
+        "webSearch": False,
+        "returnLastFrame": False,
+        "seed": -1,
+    }
+
+
+def test_sparkvideo_text_to_video_audio_false_and_seed() -> None:
+    spec = ENTERPRISE_VIDEO_BUILDERS["sparkvideo-2.0/text-to-video"]
+    body = spec.build_request(_inp(audio=False, seed=42), [])
+    assert body["generateAudio"] is False
+    assert body["seed"] == 42
+
+
+def test_sparkvideo_image_to_video_body() -> None:
+    spec = ENTERPRISE_VIDEO_BUILDERS["sparkvideo-2.0/image-to-video"]
+    assert spec.endpoint_path == "/openapi/v2/rhart-video/sparkvideo-2.0/image-to-video"
+    assert spec.mode == "startEndRequired"
+    body = spec.build_request(
+        _inp(seconds=8, resolution="1080P"), ["https://rh/first.png", "https://rh/last.png"]
+    )
+    assert body == {
+        "prompt": "a cat runs",
+        "resolution": "1080p",
+        "duration": "8",
+        "firstFrameUrl": "https://rh/first.png",
+        "lastFrameUrl": "https://rh/last.png",
+        "generateAudio": True,
+        "ratio": "16:9",
+        "realPersonMode": True,
+        "conversionSlots": ["all"],
+        "returnLastFrame": False,
+        "seed": -1,
+    }
+
+
+def test_sparkvideo_image_to_video_single_frame_last_is_none() -> None:
+    spec = ENTERPRISE_VIDEO_BUILDERS["sparkvideo-2.0/image-to-video"]
+    body = spec.build_request(_inp(seconds=5), ["https://rh/first.png"])
+    assert body["firstFrameUrl"] == "https://rh/first.png"
+    assert body["lastFrameUrl"] is None
+
+
+def test_sparkvideo_image_to_video_null_prompt_when_absent() -> None:
+    spec = ENTERPRISE_VIDEO_BUILDERS["sparkvideo-2.0/image-to-video"]
+    inp = VideoGenerationInput(ratio="16:9", first_frame_base64="data:image/png;base64,iVBORw0KGgo=")
+    body = spec.build_request(inp, ["https://rh/first.png"])
+    assert body["prompt"] is None
+
+
+def test_sparkvideo_multimodal_video_body() -> None:
+    spec = ENTERPRISE_VIDEO_BUILDERS["sparkvideo-2.0/multimodal-video"]
+    assert spec.endpoint_path == "/openapi/v2/rhart-video/sparkvideo-2.0/multimodal-video"
+    assert spec.mode == "multimodal"
+    urls = ["https://rh/a.png", "https://rh/b.png"]
+    body = spec.build_request(_inp(seconds=10, resolution="4K"), urls)
+    assert body == {
+        "prompt": "a cat runs",
+        "resolution": "4k",
+        "duration": "10",
+        "imageUrls": urls,
+        "videoUrls": [],
+        "audioUrls": [],
+        "generateAudio": True,
+        "ratio": "16:9",
+        "realPersonMode": True,
+        "conversionSlots": ["all"],
+        "returnLastFrame": False,
+        "seed": -1,
+    }
+
+
+def test_sparkvideo_multimodal_video_allows_empty_images() -> None:
+    spec = ENTERPRISE_VIDEO_BUILDERS["sparkvideo-2.0/multimodal-video"]
+    body = spec.build_request(_inp(seconds=5), [])
+    assert body["imageUrls"] == []
+    assert body["videoUrls"] == []
+
+
+def test_sparkvideo_resolution_lowercased() -> None:
+    spec = ENTERPRISE_VIDEO_BUILDERS["sparkvideo-2.0-mini/text-to-video"]
+    body = spec.build_request(_inp(resolution="2K"), [])
+    assert body["resolution"] == "2k"
+
+
+def test_sparkvideo_variants_have_correct_endpoints() -> None:
+    assert ENTERPRISE_VIDEO_BUILDERS["sparkvideo-2.0-fast/text-to-video"].endpoint_path == (
+        "/openapi/v2/rhart-video/sparkvideo-2.0-fast/text-to-video"
+    )
+    assert ENTERPRISE_VIDEO_BUILDERS["sparkvideo-2.0-fast/image-to-video"].mode == "startEndRequired"
+    assert ENTERPRISE_VIDEO_BUILDERS["sparkvideo-2.0-mini/multimodal-video"].endpoint_path == (
+        "/openapi/v2/rhart-video/sparkvideo-2.0-mini/multimodal-video"
+    )
+    assert ENTERPRISE_VIDEO_BUILDERS["sparkvideo-2.0-mini/multimodal-video"].mode == "multimodal"
+
+
+def test_enterprise_builders_has_23_entries() -> None:
+    assert len(ENTERPRISE_VIDEO_BUILDERS) == 23

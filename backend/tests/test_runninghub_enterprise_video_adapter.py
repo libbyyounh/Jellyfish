@@ -142,3 +142,106 @@ async def test_create_video_imagereference_3_uses_first_last_key(monkeypatch) ->
     )
     await adapter.create_video(cfg=cfg, input_=inp, timeout_s=60.0)
     assert len(captured["body"]["imageUrls"]) == 3
+
+
+@pytest.mark.asyncio
+async def test_create_video_text_mode_skips_upload(monkeypatch) -> None:
+    """text 模式不收集/上传图片，prompt-only 直送。"""
+    captured: dict[str, Any] = {}
+    upload_calls = 0
+
+    async def fake_upload(*args, **kwargs):
+        nonlocal upload_calls
+        upload_calls += 1
+        return "https://rh/dl/should-not-be-called.png"
+
+    async def fake_submit(base_url, api_key, endpoint_path, request_body, *, timeout_s=60.0):
+        captured["endpoint"] = endpoint_path
+        captured["body"] = request_body
+        return "ent-task-text"
+
+    monkeypatch.setattr(rh_client, "upload_media", fake_upload)
+    monkeypatch.setattr(ent_client, "submit_enterprise_task", fake_submit)
+
+    adapter = ent_video.RunningHubEnterpriseVideoApiAdapter()
+    cfg = ProviderConfig(provider="runninghub-enterprise", api_key="k", base_url="https://rh")
+    inp = VideoGenerationInput(
+        prompt="a warrior in the rain", ratio="16:9", seconds=5, model="sparkvideo-2.0/text-to-video",
+    )
+    task_id = await adapter.create_video(cfg=cfg, input_=inp, timeout_s=60.0)
+
+    assert task_id == "ent-task-text"
+    assert upload_calls == 0
+    assert captured["endpoint"] == "/openapi/v2/rhart-video/sparkvideo-2.0/text-to-video"
+    assert captured["body"] == {
+        "prompt": "a warrior in the rain",
+        "resolution": "720p",
+        "duration": "5",
+        "generateAudio": True,
+        "ratio": "16:9",
+        "webSearch": False,
+        "returnLastFrame": False,
+        "seed": -1,
+    }
+
+
+@pytest.mark.asyncio
+async def test_create_video_multimodal_prompt_only_skips_upload(monkeypatch) -> None:
+    """multimodal 模式允许 0 张参考图，prompt-only 不触发上传。"""
+    captured: dict[str, Any] = {}
+    upload_calls = 0
+
+    async def fake_upload(*args, **kwargs):
+        nonlocal upload_calls
+        upload_calls += 1
+        return "https://rh/dl/should-not-be-called.png"
+
+    async def fake_submit(base_url, api_key, endpoint_path, request_body, *, timeout_s=60.0):
+        captured["body"] = request_body
+        return "ent-task-mm"
+
+    monkeypatch.setattr(rh_client, "upload_media", fake_upload)
+    monkeypatch.setattr(ent_client, "submit_enterprise_task", fake_submit)
+
+    adapter = ent_video.RunningHubEnterpriseVideoApiAdapter()
+    cfg = ProviderConfig(provider="runninghub-enterprise", api_key="k", base_url="https://rh")
+    inp = VideoGenerationInput(
+        prompt="replace the person in the video", ratio="16:9", seconds=5,
+        model="sparkvideo-2.0-mini/multimodal-video",
+    )
+    await adapter.create_video(cfg=cfg, input_=inp, timeout_s=60.0)
+
+    assert upload_calls == 0
+    assert captured["body"]["imageUrls"] == []
+    assert captured["body"]["videoUrls"] == []
+    assert captured["body"]["audioUrls"] == []
+
+
+@pytest.mark.asyncio
+async def test_create_video_multimodal_uploads_reference_frames(monkeypatch) -> None:
+    """multimodal 模式上传 reference_frames_base64（最多 9 张）作为 imageUrls。"""
+    captured: dict[str, Any] = {}
+
+    async def fake_upload(base_url, api_key, mime, bytes_data, timeout_s=120.0):
+        return f"https://rh/dl/{len(bytes_data)}.png"
+
+    async def fake_submit(base_url, api_key, endpoint_path, request_body, *, timeout_s=60.0):
+        captured["body"] = request_body
+        return "ent-task-mm-2"
+
+    monkeypatch.setattr(rh_client, "upload_media", fake_upload)
+    monkeypatch.setattr(ent_client, "submit_enterprise_task", fake_submit)
+
+    adapter = ent_video.RunningHubEnterpriseVideoApiAdapter()
+    cfg = ProviderConfig(provider="runninghub-enterprise", api_key="k", base_url="https://rh")
+    inp = VideoGenerationInput(
+        prompt="two people eating hotpot", ratio="16:9", seconds=5,
+        model="sparkvideo-2.0/multimodal-video",
+        reference_frames_base64=[
+            "data:image/png;base64,iVBORw0KGgo=",
+            "data:image/png;base64,iVBORw0KGgo=",
+        ],
+    )
+    await adapter.create_video(cfg=cfg, input_=inp, timeout_s=60.0)
+    assert len(captured["body"]["imageUrls"]) == 2
+    assert captured["body"]["realPersonMode"] is True

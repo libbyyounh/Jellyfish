@@ -53,9 +53,16 @@ async def _resolve_enterprise_image_urls(
     api_key: str,
     timeout_s: float,
 ) -> list[str]:
-    """按 spec.mode 收集 base64 帧 → 上传 → 返回 URL 列表。不补齐。"""
-    raw_frames: list[str] = []
+    """按 spec.mode 收集 base64 帧 → 上传 → 返回 URL 列表。不补齐。
 
+    text 模式无图（返回空列表）；multimodal 模式允许 0 张参考图（prompt-only）；
+    其余模式至少需要一张参考图。
+    """
+    raw_frames: list[str] = []
+    requires_image = True
+
+    if spec.mode == "text":
+        return []
     if spec.mode == "singleImage":
         if input_.first_frame_base64:
             raw_frames.append(input_.first_frame_base64)
@@ -73,10 +80,16 @@ async def _resolve_enterprise_image_urls(
         for raw in refs[:max_n]:
             if raw:
                 raw_frames.append(raw)
+    elif spec.mode == "multimodal":
+        requires_image = False
+        refs = input_.reference_frames_base64 or []
+        for raw in refs[:9]:
+            if raw:
+                raw_frames.append(raw)
     else:
         raise ValueError(f"Unsupported enterprise mode: {spec.mode}")
 
-    if not raw_frames:
+    if requires_image and not raw_frames:
         raise ValueError("RunningHub 企业版视频生成需要至少一张参考图")
 
     urls: list[str] = []

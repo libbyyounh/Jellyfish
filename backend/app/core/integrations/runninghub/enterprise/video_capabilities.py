@@ -86,6 +86,19 @@ _ENTERPRISE_PREFIX_OVERRIDES: dict[str, VideoModelCapability] = {
     ),
 }
 
+# seedance 2.0 / Fast / Mini（sparkvideo-2.0[-fast|-mini]）：duration 4-15s，
+# 支持 6 种比例与 seed，无水印；generateAudio 可选（audio=optional）。
+_SPARKVIDEO_CAP = VideoModelCapability(
+    supports_seed=True,
+    supports_watermark=False,
+    allowed_ratios={"16:9", "4:3", "1:1", "3:4", "9:16", "21:9"},
+    default_ratio="16:9",
+    min_seconds=4,
+    max_seconds=15,
+)
+for _prefix in ("sparkvideo-2.0/", "sparkvideo-2.0-fast/", "sparkvideo-2.0-mini/"):
+    _ENTERPRISE_PREFIX_OVERRIDES[_prefix] = _SPARKVIDEO_CAP
+
 
 def register_runninghub_enterprise_video_capability(*, model_prefix: str, capability: VideoModelCapability) -> None:
     prefix = model_prefix.strip().lower()
